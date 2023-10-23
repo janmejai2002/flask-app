@@ -176,15 +176,16 @@ def main(input_pdf):
             image_path = os.path.join(output_dir, f'page_{page_number + 1}.jpg')
             cv2.imwrite(image_path, processed_image)
             processed_image_paths.append(image_path)
-
+    print('==Document Closed==')
     pdf_document.close()
     combined_image = stitch_all(output_dir, processed_image_paths)
 
     output_pdf = os.path.join('output', f'f_{name}_final.pdf')  # Specify the output PDF path
-
+    print(f"PDF OUTPUT - {output_pdf}")
     sheets = sheet(combined_image, output_pdf)
 
     with open(output_pdf, 'wb') as pdf_output:
+        print('CONVERTING TO PDF')
         pdf_output.write(img2pdf.convert(sheets))
     # shutil.rmtree(output_dir)
 
