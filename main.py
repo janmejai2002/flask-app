@@ -199,7 +199,8 @@ def index():
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_pdf():
     download_link = None  # Initialize as None
-
+    if not os.path.exists('uploads'):
+        os.mkdir('uploads')
     if request.method == 'POST':
         uploaded_file = request.files['file']
         if uploaded_file.filename != '':
