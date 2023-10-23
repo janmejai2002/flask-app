@@ -1,1 +1,1 @@
-web: gunicorn main:app --timeout 0 --log-level debug --worker-class gevent
+web: gunicorn main:app --timeout 160 --log-level debug --worker-class gevent
