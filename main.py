@@ -161,6 +161,11 @@ def process_image(image):
     return resized_img      
 
 def main(input_pdf):
+    if not os.path.exists('uploads'):
+        os.mkdir('uploads')
+    if not os.path.exists('output'):
+        os.mkdir('output')
+        
     name = os.path.splitext(os.path.basename(input_pdf))[0]
     output_dir = os.path.join('output', name)  # Specify the output directory
 
