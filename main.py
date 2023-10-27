@@ -132,35 +132,67 @@ def clean_loop(image):
 
     return image
 
-def process_image(image):
-#Goodnotes Green
-    # lower_green = (0, 165, 0)
-    # upper_green = (215, 255, 168)
-    lower_green = (82, 225, 245)
-    upper_green = (150, 250, 255)
-    green_mask = cv2.inRange(image, lower_green, upper_green)
-    # cv2.imwrite('mask.jpg', green_mask)
+def process_image(image, lower_color, upper_color):
+    color_mask = cv2.inRange(image, lower_color, upper_color)
     kernel = np.ones((3, 3), np.uint8)
-    openning = cv2.morphologyEx(green_mask, cv2.MORPH_OPEN, kernel, iterations=2)
+    openning = cv2.morphologyEx(color_mask, cv2.MORPH_OPEN, kernel, iterations=2)
     kernel = np.ones((8, 8), np.uint8)
     closing = cv2.dilate(openning, kernel, iterations=3)
 
-
     preserved_highlights = cv2.bitwise_and(image, image, mask=closing)
-    # cv2.imwrite('mask1.jpg',preserved_highlights )
     gray = cv2.cvtColor(preserved_highlights, cv2.COLOR_RGB2GRAY)
     _, preserved_text = cv2.threshold(gray, 135, 255, cv2.THRESH_BINARY_INV)
     preserved_text = cv2.bitwise_and(preserved_text, preserved_text, mask=closing)
 
     final_image = 255 - preserved_text
     cleaned_image = clean_loop(final_image)
-    
-    # cv2.imwrite('clean.jpg', cleaned_image)
-    resized_img=resize_img(cleaned_image)
-    cv2.imwrite('final.jpg', resized_img)
-    return resized_img      
 
-def main(input_pdf):
+    resized_img = resize_img(cleaned_image)
+    return resized_img
+
+
+
+@app.route('/')
+def index():
+    # return "Welcome to the PDF Processing Web App. <a href='/upload'>Upload a PDF</a>"
+    return render_template('upload.html')
+
+# Create a route for uploading and processing PDFs
+
+@app.route('/upload', methods=['GET', 'POST'])
+def upload_pdf():
+    download_link = None
+    color_choice = 'yellow'  # Default color choice
+    lower_color, upper_color = (82, 225, 245), (150, 250, 255)  # Default values for yellow
+
+    if request.method == 'POST':
+        uploaded_file = request.files['file']
+        color_choice = request.form.get('color_choice')  # Get the user's color choice
+
+        if color_choice == 'green':
+            lower_color, upper_color = (0, 165, 0), (215, 255, 168)  # Use green color values
+
+        if uploaded_file.filename != '':
+            input_pdf_path = os.path.join('uploads', uploaded_file.filename)
+            uploaded_file.save(input_pdf_path)
+            name, output_pdf_path = main(input_pdf_path, lower_color, upper_color)  # Process the uploaded PDF with the selected color
+            normalized_output_path = os.path.normpath(output_pdf_path)
+            download_link = '/download/' + os.path.basename(output_pdf_path)
+
+    return render_template('upload.html', download_link=download_link, color_choice=color_choice)
+
+
+@app.route('/download/<path:pdf_filename>')
+def download_pdf(pdf_filename):
+    # Specify the directory where the processed PDFs are stored
+    output_dir = 'output'
+    try:
+        return send_from_directory(output_dir, pdf_filename, as_attachment=True)
+    except Exception as e:
+        return str(e)  # Print any error that occurs during file retrieval
+
+
+def main(input_pdf,lower_color,upper_color):
     if not os.path.exists('uploads'):
         os.mkdir('uploads')
     if not os.path.exists('output'):
@@ -185,7 +217,7 @@ def main(input_pdf):
 
         cv2.imwrite('input.jpg', image_rgb)
         # print(image.mode)
-        processed_image = process_image(image_rgb)
+        processed_image = process_image(image_rgb, lower_color, upper_color)  # Pass color values
 
 
         if processed_image is not None and processed_image.shape[0] > 3:
@@ -193,8 +225,7 @@ def main(input_pdf):
             cv2.imwrite(image_path, processed_image)
             processed_image_paths.append(image_path)
         else:
-            print(f"Skipping page {page_number + 1} due to processing issues.")
-
+            pass
     pdf_document.close()
     if not processed_image_paths:
         print("No valid images were processed.")
@@ -210,41 +241,6 @@ def main(input_pdf):
         pdf_output.write(img2pdf.convert(sheets))
 
     return name, output_pdf  # Return the path to the generated PDF
-
-
-@app.route('/')
-def index():
-    return "Welcome to the PDF Processing Web App. <a href='/upload'>Upload a PDF</a>"
-
-# Create a route for uploading and processing PDFs
-@app.route('/upload', methods=['GET', 'POST'])
-def upload_pdf():
-    download_link = None  # Initialize as None
-    if not os.path.exists('uploads'):
-        os.mkdir('uploads')
-    if not os.path.exists('output'):
-        os.mkdir('output')
-    if request.method == 'POST':
-        uploaded_file = request.files['file']
-        if uploaded_file.filename != '':
-            input_pdf_path = os.path.join('uploads', uploaded_file.filename)
-            uploaded_file.save(input_pdf_path)
-            name, output_pdf_path = main(input_pdf_path)  # Process the uploaded PDF
-            normalized_output_path = os.path.normpath(output_pdf_path)
-            download_link = '/download/' + os.path.basename(output_pdf_path)
-
-            print(f"DOWNLOAD LINK - {download_link}")
-
-    return render_template('upload.html', download_link=download_link)
-
-@app.route('/download/<path:pdf_filename>')
-def download_pdf(pdf_filename):
-    # Specify the directory where the processed PDFs are stored
-    output_dir = 'output'
-    try:
-        return send_from_directory(output_dir, pdf_filename, as_attachment=True)
-    except Exception as e:
-        return str(e)  # Print any error that occurs during file retrieval
 
 if __name__ == "__main__":
     if not os.path.exists('uploads'):

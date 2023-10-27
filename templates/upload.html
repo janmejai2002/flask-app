@@ -7,10 +7,12 @@
     <h1>Upload a PDF for Processing</h1>
     <form method="POST" action="/upload" enctype="multipart/form-data">
         <input type="file" name="file">
+        <p>Select Color for Processing:</p>
+        <input type="radio" name="color_choice" value="yellow" checked> Yellow
+        <input type="radio" name="color_choice" value="green"> Green
         <input type="submit" value="Upload and Process">
     </form>
     <hr>
-    <!-- Display a link to download the processed PDF -->
     {% if download_link %}
     <p><a href="{{ download_link }}">Download Processed PDF</a></p>
     {% endif %}
