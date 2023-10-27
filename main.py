@@ -219,7 +219,7 @@ def index():
 # Create a route for uploading and processing PDFs
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_pdf():
-	download_link = None  # Initialize as None
+    download_link = None  # Initialize as None
     if not os.path.exists('uploads'):
         os.mkdir('uploads')
     if not os.path.exists('output'):
