@@ -161,6 +161,15 @@ def index():
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_pdf():
+    if os.path.exists('uploads'):
+        shutil.rmtree('uploads')
+    if os.path.exists('output'):
+        shutil.rmtree('output')
+    if not os.path.exists('uploads'):
+        os.mkdir('uploads')
+    if not os.path.exists('output'):
+        os.mkdir('output')
+
     download_link = None
     color_choice = 'yellow'  # Default color choice
     lower_color, upper_color = (82, 225, 245), (150, 250, 255)  # Default values for yellow
@@ -193,10 +202,7 @@ def download_pdf(pdf_filename):
 
 
 def main(input_pdf,lower_color,upper_color):
-    if not os.path.exists('uploads'):
-        os.mkdir('uploads')
-    if not os.path.exists('output'):
-        os.mkdir('output')
+
         
     name = os.path.splitext(os.path.basename(input_pdf))[0]
     output_dir = os.path.join('output', name)  # Specify the output directory
@@ -243,8 +249,4 @@ def main(input_pdf,lower_color,upper_color):
     return name, output_pdf  # Return the path to the generated PDF
 
 if __name__ == "__main__":
-    if not os.path.exists('uploads'):
-        os.mkdir('uploads')
-    if not os.path.exists('output'):
-        os.mkdir('output')
     app.run()
