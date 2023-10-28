@@ -2,6 +2,43 @@
 <html>
 <head>
     <title>PDF Processing</title>
+
+    <style>
+        .progress {
+            width: 100%;
+            background-color: #f3f3f3;
+        }
+
+        .progress-bar {
+            width: 0;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script type="text/javascript">
+        function updateProgress() {
+            $.get('/get_progress', function (data) {
+                var progress = data.progress;
+                var progressBar = document.getElementById('progress-bar');
+                progressBar.style.width = progress + '%';
+                progressBar.innerHTML = progress.toFixed(2) + '%';
+
+                if (progress < 100) {
+                    // Poll for progress every 1 second
+                    setTimeout(updateProgress, 1000);
+                }
+            });
+        }
+
+        // Call the function to start polling for progress
+        updateProgress();
+    </script>
 </head>
 <body>
     <h1>Upload a PDF for Processing</h1>
@@ -13,8 +50,17 @@
         <input type="submit" value="Upload and Process">
     </form>
     <hr>
-    {% if download_link %}
-    <p><a href="{{ download_link }}">Download Processed PDF</a></p>
-    {% endif %}
+    <div class="progress">
+        <div class="progress-bar" id="progress-bar" style="width: 0%">
+            0%
+        </div>
+    </div>
+      <!-- Add a placeholder for the download link -->
+      <div id="download-link">
+        {% if download_link %}
+            <p><a href="{{ download_link }}" download>Download Processed PDF</a></p>
+        {% endif %}
+    </div>
+ 
 </body>
 </html>
