@@ -45,11 +45,10 @@ def stitch_all(folder_path, image_list):
     return combined_image
 
 
-def sheet(input_image_path, output_dir):
+def get_document(image, name):
     # Load the input image using cv2
     output_dir = "output_images"  # Directory to save split images
 
-    image = input_image_path
     split_height = 1555  # Height at which to split the image
 
     if image is None:
@@ -86,7 +85,12 @@ def sheet(input_image_path, output_dir):
         imgs.append(output_path)
         split_count += 1
         start = end
-    return imgs
+
+    
+    output_pdf = os.path.join('output', f'{name}_notes.pdf')  # Specify the output PDF path
+
+    with open(output_pdf, 'wb') as pdf_output:
+        pdf_output.write(img2pdf.convert(imgs))
 
 
 def resize_img(image):
@@ -166,50 +170,38 @@ def get_pdf_info(input_pdf):
     return total
 
 
-def pdf_loop(input_pdf, output_dir, lower_color, upper_color):
-    pdf_document = fitz.open(input_pdf)
-
-    total_pages = pdf_document.page_count
-
-    for page_number in range(total_pages):
-        
-        page = pdf_document.load_page(page_number)
-
-        processed_image = process_image(page, lower_color, upper_color)  # Pass color values
-
-        if processed_image is not None and processed_image.shape[0] > 3:
-            image_path = os.path.join(output_dir, f'page_{page_number + 1}.jpg')
-            cv2.imwrite(image_path, processed_image)
-        else:
-            pass
-    pdf_document.close()
-
-
-def process_pdf(input_pdf,lower_color,upper_color):
-
-        
-    name = os.path.splitext(os.path.basename(input_pdf))[0]
-    output_dir = os.path.join('output', name)  # Specify the output directory
-
-    os.makedirs(output_dir, exist_ok=True)
-
-    pdf_loop(input_pdf, output_dir, lower_color, upper_color)
+def get_image_list(output_dir):
     images = os.listdir(output_dir)
     images.sort(key=lambda x: os.path.getctime(os.path.join(output_dir, x)))
     image_paths = [os.path.join(output_dir, image) for image in images]
     if not image_paths:
         print("No valid images were processed.")
         return None, None
+    return image_paths
 
+
+def process_pdf(input_pdf,lower_color,upper_color):
+  
+    name = os.path.splitext(os.path.basename(input_pdf))[0]
+    output_dir = os.path.join('output', name)  # Specify the output directory
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    pdf_document = fitz.open(input_pdf)
+    total_pages = pdf_document.page_count
+    for page_number in range(total_pages):
+        page = pdf_document.load_page(page_number)
+        processed_image = process_image(page, lower_color, upper_color) 
+        if processed_image is not None and processed_image.shape[0] > 3:
+            image_path = os.path.join(output_dir, f'page_{page_number + 1}.jpg')
+            cv2.imwrite(image_path, processed_image)
+        else:
+            pass
+    pdf_document.close()
+    
+    image_paths = get_image_list(output_dir)
     combined_image = stitch_all(output_dir, image_paths)
+    get_document(combined_image, name)
 
-    output_pdf = os.path.join('output', f'{name}_final.pdf')  # Specify the output PDF path
-
-    sheets = sheet(combined_image, output_pdf)
-
-    with open(output_pdf, 'wb') as pdf_output:
-        pdf_output.write(img2pdf.convert(sheets))
-
-    return output_pdf  # Return the path to the generated PDF
 
 

@@ -12,9 +12,6 @@ def index():
 
 # Create a route for uploading and processing PDFs
 
-def pdf_processor(input_pdf_path, lower_color, upper_color):
-    output_pdf = process_pdf(input_pdf_path, lower_color, upper_color)
-    return output_pdf
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_pdf():
@@ -32,10 +29,16 @@ def upload_pdf():
             lower_color, upper_color = (0, 165, 0), (215, 255, 168)  # Use green color values
 
         if uploaded_file.filename != '':
-            input_pdf_path = os.path.join('uploads', uploaded_file.filename)
-            uploaded_file.save(input_pdf_path)
-            output_pdf_path = pdf_processor(input_pdf_path, lower_color, upper_color)  # Process the uploaded PDF with the selected color
-            download_link = '/download/' + os.path.basename(output_pdf_path)
+            input_pdf = os.path.join('uploads', uploaded_file.filename)
+
+            uploaded_file.save(input_pdf)
+
+            process_pdf(input_pdf, lower_color, upper_color)
+            
+            input_name = os.path.splitext(os.path.basename(input_pdf))[0]
+            output_pdf_path = os.path.join('output', f'{input_name}_notes.pdf') 
+            if os.path.exists(output_pdf_path): 
+                download_link = '/download/' + os.path.basename(output_pdf_path)
 
     return render_template('upload.html', download_link=download_link, color_choice=color_choice)
 
