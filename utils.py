@@ -181,7 +181,8 @@ def get_image_list(output_dir):
 
 
 def process_pdf(input_pdf,lower_color,upper_color):
-  
+    global progress
+    progress = 0
     name = os.path.splitext(os.path.basename(input_pdf))[0]
     output_dir = os.path.join('output', name)  # Specify the output directory
 
