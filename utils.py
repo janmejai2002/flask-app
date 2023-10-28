@@ -179,30 +179,3 @@ def get_image_list(output_dir):
         return None, None
     return image_paths
 
-
-def process_pdf(input_pdf,lower_color,upper_color):
-    global progress
-    progress = 0
-    name = os.path.splitext(os.path.basename(input_pdf))[0]
-    output_dir = os.path.join('output', name)  # Specify the output directory
-
-    os.makedirs(output_dir, exist_ok=True)
-
-    pdf_document = fitz.open(input_pdf)
-    total_pages = pdf_document.page_count
-    for page_number in range(total_pages):
-        page = pdf_document.load_page(page_number)
-        processed_image = process_image(page, lower_color, upper_color) 
-        if processed_image is not None and processed_image.shape[0] > 3:
-            image_path = os.path.join(output_dir, f'page_{page_number + 1}.jpg')
-            cv2.imwrite(image_path, processed_image)
-        else:
-            pass
-    pdf_document.close()
-    
-    image_paths = get_image_list(output_dir)
-    combined_image = stitch_all(output_dir, image_paths)
-    get_document(combined_image, name)
-
-
-
