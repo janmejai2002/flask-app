@@ -1,13 +1,5 @@
 import os
-import cv2
-import numpy as np
-import fitz
-from PIL import Image
-import img2pdf
-import argparse
-from tqdm.auto import tqdm
-import shutil
-from flask import Flask, request, render_template, send_file, send_from_directory, url_for
+from flask import Flask, request, render_template, send_from_directory
 from utils import *
 app = Flask(__name__)
 
