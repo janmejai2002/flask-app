@@ -40,9 +40,11 @@ def stitch_all(folder_path, image_list):
             canvas[:, left_border_width:left_border_width + current_width, :] = image
 
             images.append(canvas)
-
-    combined_image = np.vstack(images)
-    return combined_image
+    try:
+        combined_image = np.vstack(images)
+        return combined_image
+    except Exception as e:
+        return False
 
 
 def get_document(image, name):
@@ -155,6 +157,8 @@ def process_image(page, lower_color, upper_color):
 
 
 def sys_clean():
+    if os.path.exists('output_images'):
+        shutil.rmtree('output_images')
     if os.path.exists('uploads'):
         shutil.rmtree('uploads')
     if os.path.exists('output'):

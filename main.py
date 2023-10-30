@@ -28,7 +28,11 @@ def process_pdf(input_pdf,lower_color,upper_color):
     
     image_paths = get_image_list(output_dir)
     combined_image = stitch_all(output_dir, image_paths)
-    get_document(combined_image, name)
+    if combined_image is None:
+        return False
+    else:
+        get_document(combined_image, name)
+        return True
 
 
 
@@ -65,13 +69,17 @@ def upload_pdf():
 
             uploaded_file.save(input_pdf)
 
-            process_pdf(input_pdf, lower_color, upper_color)
-            
-            input_name = os.path.splitext(os.path.basename(input_pdf))[0]
-            output_pdf_path = os.path.join('output', f'{input_name}_notes.pdf') 
-            if os.path.exists(output_pdf_path): 
-                download_link = '/download/' + os.path.basename(output_pdf_path)
+            bool_process = process_pdf(input_pdf, lower_color, upper_color)
 
+            if bool_process:
+                input_name = os.path.splitext(os.path.basename(input_pdf))[0]
+                output_pdf_path = os.path.join('output', f'{input_name}_notes.pdf') 
+                if os.path.exists(output_pdf_path): 
+                    download_link = '/download/' + os.path.basename(output_pdf_path)
+                else:
+                    download_link = 'no link'
+            else:
+                download_link = 'no link'
     return render_template('upload.html', download_link=download_link, color_choice=color_choice)
 
 

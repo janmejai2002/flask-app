@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>PDF Processing</title>
-
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         .progress {
             width: 100%;
@@ -18,9 +18,7 @@
             color: white;
         }
     </style>
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <script type="text/javascript">
         function updateProgress() {
             $.get('/get_progress', function (data) {
@@ -31,36 +29,64 @@
 
                 if (progress < 100) {
                     // Poll for progress every 1 second
-                    setTimeout(updateProgress, 1000);
+                    setTimeout(updateProgress, 100);
                 }
             });
         }
-
+        function resetProgress(){
+            var progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = 0 + '%';
+            progressBar.innerHTML = progress.toFixed(2) + '%';
+            
+        }
         // Call the function to start polling for progress
         updateProgress();
     </script>
+
 </head>
 <body>
-    <h1>Upload a PDF for Processing</h1>
-    <form method="POST" action="/upload" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <p>Select Color for Processing:</p>
-        <input type="radio" name="color_choice" value="yellow" checked> Yellow
-        <input type="radio" name="color_choice" value="green"> Green
-        <input type="submit" value="Upload and Process">
-    </form>
-    <hr>
-    <div class="progress">
-        <div class="progress-bar" id="progress-bar" style="width: 0%">
-            0%
+    <div class="container">
+        <h1 class="mt-4">Upload a PDF for Processing</h1>
+        <form method="POST" action="/upload" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">Select a PDF:</label>
+                <input type="file" class="form-control" name="file" id="file">
+            </div>
+            <div class="form-group">
+                <p>Select Color for Processing:</p>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" name="color_choice" value="yellow" checked>
+                    <label class="form-check-label" for="color_yellow">Yellow</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" name="color_choice" value="green">
+                    <label class="form-check-label" for="color_green">Green</label>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Upload and Process</button>
+        </form>
+        <hr>
+        <div id='progress-indicator' class="progress" style="height: 20px;">
+            <div class="progress-bar-striped progress-bar-animated bg-info" id ='progress-bar' role = "progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                
+            </div>
         </div>
+        <div id="download-link" class="mt-3">
+            {% if not download_link %}
+            <p></p>
+            {% elif download_link == 'no link' %}
+                <p>No Link Generated. Please check your settings and file</p>
+            {% else %}
+                <p><a href="{{ download_link }}" class="btn btn-success" download>Download Processed PDF</a></p>
+            {% endif %}
+
+        </div>
+        <button id = "btn-home" a href="/" class="btn btn-primary mt-3">Go to Homepage</a>
+            <script>
+                document.getElementById('btn-home').addEventListener("click", function() {
+                    resetProgress();
+                });
+            </script>
     </div>
-      <!-- Add a placeholder for the download link -->
-      <div id="download-link">
-        {% if download_link %}
-            <p><a href="{{ download_link }}" download>Download Processed PDF</a></p>
-        {% endif %}
-    </div>
- 
 </body>
 </html>
